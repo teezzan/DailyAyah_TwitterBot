@@ -138,7 +138,12 @@ function gen() {
 
 
     })
-
+    .catch((err) => {
+      console.log(err);
+      setTimeout(() => {
+        gen();
+      }, 6000);
+    })
 
 }
 
