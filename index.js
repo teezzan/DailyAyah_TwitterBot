@@ -62,8 +62,9 @@ function gen() {
 
     })
     .then((textObj) => {
+      //${textObj.arText} \n\n
 
-      textToImage.generate(`\n${textObj.arText} \n\n ${textObj.enText}\n\nQuran ${surah_no}:${no_ayah}\nReciter: ${parseName(rec_Url)}\n\nDailyAyahBot`, {
+      textToImage.generate(`\n${textObj.enText}\n\nQuran ${surah_no}:${no_ayah}\nReciter: ${parseName(rec_Url)}\n\nDailyAyahBot`, {
         fontFamily: 'Comic Sans',
         margin: 10,
         maxWidth: 720,
