@@ -2,7 +2,8 @@ let fs = require('fs');
 let textToImage = require('text-to-image');
 let axios = require('axios');
 let surah = require('./surah.json');
-let reciter = require('./recite')
+let reciter = require('./recite');
+let ffmpeg = require('fluent-ffmpeg');
 let no_ayah = 1;
 
 let surah_no = 1;
@@ -34,10 +35,11 @@ function gen() {
   no_ayah = randomint(2, surah[surah_no - 1].count);
   no_reciter = randomint(0, reciter.length - 1)
   rec_Url = `${reciter[no_reciter].audio_url_bit_rate_64}${parseNum(surah_no)}${parseNum(no_ayah)}.mp3`
+  console.log(rec_Url);
 
   axios.get(`http://api.alquran.cloud/v1/ayah/${surah_no}:${no_ayah}/editions/en.sahih,ar.alafasy`)
     .then((response) => {
-      // console.log(response.data.data);
+      console.log(response.data.data);
       return response.data.data
     })
     .then((data) => {
@@ -55,18 +57,44 @@ function gen() {
       textToImage.generate(`\n${textObj.arText} \n\n ${textObj.enText}\n\nQuran ${surah_no}:${no_ayah}\nReciter: ${parseName(rec_Url)}\n\nDailyAyahBot`, {
         fontFamily: 'Comic Sans',
         margin: 10,
+        maxWidth: 720,
         textAlign: "center",
         fontSize: 22,
         // bgColor: "black",
         // textColor: "white"
       }).then(function (base64Image) {
-        // console.log(base64Image);
         base64Image = base64Image.split(';base64,').pop();
         fs.writeFile('./images/image.png', base64Image, { encoding: 'base64' }, function (err) {
           console.log('File created');
         });
+      }).then(() => {
+        // From a local path...
+        ffmpeg.ffprobe(rec_Url, function (err, metadata) {
+          if (err) console.log(err);
+
+          // console.dir(metadata); // all metadata
+          console.log(metadata.format.duration);
+          var proc = ffmpeg('./images/image.png')
+            .loop(metadata.format.duration)
+            .input(rec_Url)
+            .audioCodec('copy')
+            // setup event handlers
+            .on('end', function () {
+              console.log('file has been converted succesfully');
+            })
+            .on('error', function (err) {
+              console.log('an error happened: ' + err.message);
+            })
+            // save to file
+            .save('./newpost.mp4');
+        })
+
       });
+
+
     })
 
+
 }
+
 gen();
