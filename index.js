@@ -5,11 +5,16 @@ let surah = require('./surah.json');
 let reciter = require('./recite');
 let ffmpeg = require('fluent-ffmpeg');
 var Twit = require('twit');
-let config = require('./config')
 let no_ayah = 1;
 let surah_no = 1;
 
-let T = new Twit(config);
+let config = require('./config')
+let T = new Twit({
+  access_token: process.env.ACCESS_TOKEN || config.access_token,
+  access_token_secret: process.env.ACCESS_TOKEN_SECRET || config.access_token_secret,
+  consumer_key: process.env.CONSUMER_KEY || config.consumer_key,
+  consumer_secret: process.env.CONSUMER_SECRET || config.consumer_secret
+});
 
 
 function randomint(min, max) {
@@ -81,20 +86,41 @@ function gen() {
           var proc = ffmpeg('./images/image.png')
             .loop(metadata.format.duration)
             .input(rec_Url)
-            .audioCodec('copy')
+            .outputOptions('-c:v libx264')
+            .outputOptions('-pix_fmt yuv420p')
+            .outputOptions('-f mp4')
             // setup event handlers
             .on('end', function () {
               console.log('file has been converted succesfully');
               console.log("done...");
-              T.postMediaChunked({ file_path: './newpost.mp4' }, function (err, data, response) {
-                console.log(data);
-                console.log(response);
-                console.log("posted");
-              })
-              T.post('statuses/update', { status: 'Testing API!' }, function (err, data, response) {
-                console.log(data);
-                console.log(response);
-                console.log("posted status");
+
+              var filePath = './newpost.mp4'
+              T.postMediaChunked({ file_path: filePath, media_category: 'video/mp4' }, function (err, data, response) {
+                console.log(data)
+                var mediaIdStr = data.media_id_string
+                var altText = "Quran Recitation."
+                var meta_params = { media_id: mediaIdStr, alt_text: { text: altText } }
+                console.log('file 1 succesfully');
+                setTimeout(() => {
+                  T.post('media/metadata/create', meta_params, function (err, data, response) {
+                    if (!err) {
+                      // now we can reference the media and post a tweet (media will attach to the tweet)
+                      var params = { status: 'DailyAyah.herokuapp.com #islam #quran', media_ids: [mediaIdStr] }
+                      console.log('file 2 succesfully = ');
+                      T.post('statuses/update', params, function (err, data, response) {
+                        console.log(data)
+                        console.log('file 3 succesfully');
+
+                      })
+
+                    } else {
+                      console.log(err);
+                    }
+
+
+                  })
+                }, 3000);
+
               })
 
             })
