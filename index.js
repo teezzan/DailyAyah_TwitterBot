@@ -4,9 +4,13 @@ let axios = require('axios');
 let surah = require('./surah.json');
 let reciter = require('./recite');
 let ffmpeg = require('fluent-ffmpeg');
+var Twit = require('twit');
+let config = require('./config')
 let no_ayah = 1;
-
 let surah_no = 1;
+
+let T = new Twit(config);
+
 
 function randomint(min, max) {
   return Math.floor(Math.random() * (max - min + 1) + min);
@@ -82,6 +86,16 @@ function gen() {
             .on('end', function () {
               console.log('file has been converted succesfully');
               console.log("done...");
+              T.postMediaChunked({ file_path: './newpost.mp4' }, function (err, data, response) {
+                console.log(data);
+                console.log(response);
+                console.log("posted");
+              })
+              T.post('statuses/update', { status: 'Testing API!' }, function (err, data, response) {
+                console.log(data);
+                console.log(response);
+                console.log("posted status");
+              })
 
             })
             .on('error', function (err) {
