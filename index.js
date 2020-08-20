@@ -81,12 +81,17 @@ function gen() {
             // setup event handlers
             .on('end', function () {
               console.log('file has been converted succesfully');
+              console.log("done...");
+
             })
             .on('error', function (err) {
               console.log('an error happened: ' + err.message);
             })
             // save to file
-            .save('./newpost.mp4');
+            .save('./newpost.mp4', () => {
+
+            })
+
         })
 
       });
@@ -96,5 +101,6 @@ function gen() {
 
 
 }
+
 
 gen();
