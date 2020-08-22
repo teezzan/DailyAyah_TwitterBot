@@ -109,8 +109,14 @@ function gen() {
                       var params = { status: 'DailyAyah.herokuapp.com #islam #quran', media_ids: [mediaIdStr] }
                       console.log('file 2 succesfully = ');
                       T.post('statuses/update', params, function (err, data, response) {
-                        console.log(data)
-                        console.log('file 3 succesfully');
+                        if (data.errors.length !== 0) {
+                          console.log("retrying");
+                          setTimeout(() => {
+                            gen();
+                          }, 6000);
+                        } else {
+                          console.log("file 3 successfull too")
+                        }
 
                       })
 
